@@ -1,6 +1,6 @@
 html {
     position: relative;
-    background-image: url('../img/backgraund.jpg');
+    background-image: url('../img/photo_2025-03-09_17-53-35.jpg');
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: fixed;
@@ -15,8 +15,18 @@ html::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgb(150, 136, 92);
     z-index: -1;
+    animation: back 1s forwards;
+    -webkit-animation: back 1s forwards ease-in-out;
+}
+
+@keyframes back{
+    from{
+        background-color: rgb(150, 136, 92);
+    }
+    to{
+        background-color: rgba(150, 136, 92, 0.719);
+    }
 }
 h1{
     font-size: 2rem;

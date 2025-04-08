@@ -1,6 +1,6 @@
 html {
     position: relative;
-    background-image: url('../img/backgraund.jpg');
+    background-image: url('../img/город3.png');
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: fixed;
@@ -15,8 +15,18 @@ html::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgb(150, 136, 92);
     z-index: -1;
+    animation: back 1s forwards;
+    -webkit-animation: back 1s forwards ease-in-out;
+}
+
+@keyframes back{
+    from{
+        background-color: rgb(150, 136, 92);
+    }
+    to{
+        background-color: rgba(150, 136, 92, 0.719);
+    }
 }
 h1{
     font-size: 4rem;
@@ -82,6 +92,46 @@ nav{
     gap: 2rem;
     margin-right: 12rem;
     margin-bottom: 4rem;
+}
+
+.new_technology{
+    display: flex;
+    flex-direction: column;
+}
+
+.new_technology > div{
+    align-self: center;
+    border: 1px solid black;
+    max-width: 30rem;
+    padding: 1rem;
+}
+
+.new_technology > div > p{
+    font-size: 2rem;
+    text-align: center;
+}
+
+.new_technology > div > img{
+    width: 30rem;
+    height: 30rem;
+    object-fit: cover;
+    margin-bottom: 1rem;
+}
+
+.post_2{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.raskadrovka{
+    border: 1px solid black;
+    padding: 1rem;
+}
+.raskadrovka > p{
+    font-size: 2rem;
+    text-align: center;
 }
 
 .personagies{
