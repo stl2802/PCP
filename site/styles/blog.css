@@ -19,7 +19,7 @@ html::before {
     z-index: -1;
 }
 h1{
-    font-size: 2rem;
+    font-size: 4rem;
     margin-left: 43%;
     margin-bottom: 2rem;
 }
@@ -82,4 +82,44 @@ nav{
     gap: 2rem;
     margin-right: 12rem;
     margin-bottom: 4rem;
+}
+
+.personagies{
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+h2{
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.mama_vani, .sveta, .vana{
+    border: 1px solid black;
+    padding: 1rem;
+}
+
+.mama_vani > p, .sveta > p,.vana > p{
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.mama_vani > img,.sveta > img,.vana > img{
+    width: 30rem;
+    height: 30rem;
+    object-fit: cover;
+    margin-bottom: 1rem;
+}
+
+.vana > img{
+    object-position:top;
+}
+.sveta > img{
+    object-position: 50% 15%;
+}
+.mama_vani > img{
+    object-position: left;
 }
