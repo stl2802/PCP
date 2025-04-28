@@ -22,7 +22,7 @@ html::before {
 
 @keyframes back{
     from{
-        background-color: rgb(150, 136, 92);
+        background-color: rgb(94, 74, 10);
     }
     to{
         background-color: rgba(150, 136, 92, 0.719);
@@ -94,12 +94,29 @@ nav{
     margin-bottom: 4rem;
 }
 
+.new_design{
+    display: flex;
+    justify-content: center;
+}
+
 .new_technology{
     display: flex;
     flex-direction: column;
 }
 
-.new_technology > div{
+.uuu{
+    display: flex;
+    justify-content: center;
+    gap:1rem;
+}
+
+.TG{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.new_technology > div, .new_design > div,.new_raskadrovka,.raskadrovka_3,.TG{
     align-self: center;
     border: 1px solid black;
     max-width: 30rem;
@@ -132,6 +149,11 @@ nav{
 .raskadrovka > p{
     font-size: 2rem;
     text-align: center;
+}
+.raskadrovka > img{
+    max-width: 50rem;
+    max-height: 45rem;
+    object-fit: cover;
 }
 
 .personagies{
@@ -172,4 +194,22 @@ h2{
 }
 .mama_vani > img{
     object-position: left;
+}
+
+
+
+.footer-flex-container{
+    padding: 1rem;
+    display: flex;
+    justify-content:space-between;
+    gap: 2rem;
+    margin-bottom: 2rem;
+
+    border-top: 1px solid #000000;
+}
+
+.footer-container > address{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
