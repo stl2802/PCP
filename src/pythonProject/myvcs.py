@@ -1,174 +1,250 @@
 import argparse
 import os
+import hashlib
+import json
+from datetime import datetime
 
 REPO_DIR = ".myvcs"
-version = "1.0"  # потом изменим
-
-def main():
-#crete and replase file
-    def crete_GitPlach():
-        if (os.path.isdir(".GitPlach") == False):
-            os.mkdir(r".GitPlach")
-            os.chdir(r".GitPlach/")
-            os.mkdir(r"objects")
-            with open("index", "w") as areaindex:
-                pass
+VERSION = "1.0"
+COMMITS_DIR = os.path.join(REPO_DIR, "commits")
+OBJECTS_DIR = os.path.join(REPO_DIR, "objects")
+INDEX_FILE = os.path.join(REPO_DIR, "index")
+HEAD_FILE = os.path.join(REPO_DIR, "HEAD")
+CONFIG_FILE = os.path.join(REPO_DIR, "config")
 
 
-    def add(filename):
-        index_file = os.path.join(".GitPlach", "index.txt")
+class GitPlach:
+    @staticmethod
+    def init():
+        """Initialize new repository"""
+        if not os.path.exists(REPO_DIR):
+            os.makedirs(REPO_DIR)
+            os.makedirs(OBJECTS_DIR)
+            os.makedirs(COMMITS_DIR)
 
-        if os.path.exists(".GitPlach"):
-            try:
-                with open(index_file, "r", encoding="utf-8") as index:
-                    lines = index.readlines()
+            with open(INDEX_FILE, 'w') as f:
+                json.dump([], f)
 
-                with open(index_file, "w", encoding="utf-8") as index:
-                    for line in lines:
-                        index.write(line)
-                    index.write(f"{filename}\n")
+            with open(HEAD_FILE, 'w') as f:
+                f.write("main")  # Default branch
 
-                print(f"Файл '{filename}' добавлен в индекс.")
+            with open(CONFIG_FILE, 'w') as f:
+                json.dump({
+                    "version": VERSION,
+                    "created": datetime.now().isoformat(),
+                    "author": os.getenv("USER", "anonymous")
+                }, f)
 
-            except FileNotFoundError:
-                print("Файл index не найден.")
-            except Exception as e:
-                print(f"Ошибка при работе с файлом index: {e}")
+            print(f"Initialized empty GitPlach repository in {os.path.abspath(REPO_DIR)}")
+            return True
         else:
-            print("Директория .GitPlach не найдена.")
+            print("GitPlach repository already exists")
+            return False
 
+    @staticmethod
+    def _get_file_hash(filepath):
+        """Calculate SHA-1 hash of file content"""
+        sha1 = hashlib.sha1()
+        with open(filepath, 'rb') as f:
+            while True:
+                data = f.read(65536)  # 64kb chunks
+                if not data:
+                    break
+                sha1.update(data)
+        return sha1.hexdigest()
 
+    @staticmethod
+    def add(filepath):
+        """Add file to staging area"""
+        if not os.path.exists(REPO_DIR):
+            print("Not a GitPlach repository")
+            return False
 
-    def remove(filename):
-        index_file = os.path.join(".GitPlach", "index.txt")
-
-        if os.path.exists(".GitPlach"):
-            try:
-                with open(index_file, "r", encoding="utf-8") as index:
-                    lines = index.readlines()
-
-                new_lines = []
-                delete_block = False
-
-                for line in lines:
-                    if line == f"{filename}\n":
-                        delete_block = True
-                    elif delete_block:
-                        if line.strip() == "":
-                            delete_block = False
-                        continue
-                    else:
-                        new_lines.append(line)
-
-                with open(index_file, "w", encoding="utf-8") as index:
-                    index.writelines(new_lines)
-
-                print(f"Блок строк, начинающийся с '{filename}', удален из индекса.")
-
-            except FileNotFoundError:
-                print("Файл index не найден.")
-            except Exception as e:
-                print(f"Ошибка при работе с файлом index: {e}")
-        else:
-            print("Директория .GitPlach не найдена.")
-
-        def line(line_name):
-            pass
-        def check():
-            pass
-
-    def save(commit_name):
-        gitplach_dir = ".GitPlach"
-        index_file = os.path.join(gitplach_dir, "index.txt")
-
-        if not os.path.exists(gitplach_dir):
-            print(f"Директория '{gitplach_dir}' не найдена.")
-            return
-
-        object_dir = os.path.join(gitplach_dir, "objects")
-        commit_file = os.path.join(object_dir, commit_name)
+        if not os.path.exists(filepath):
+            print(f"File {filepath} does not exist")
+            return False
 
         try:
-            with open(index_file, "r", encoding="utf-8") as index_file_read:
-                lines = index_file_read.readlines()
+            with open(INDEX_FILE, 'r') as f:
+                index = json.load(f)
 
-            with open(commit_file, "w", encoding="utf-8") as commit_file_write:
-                for line in lines:
-                    commit_file_write.write(line)
-            print("Успешно")
+            file_hash = GitPlach._get_file_hash(filepath)
+            obj_path = os.path.join(OBJECTS_DIR, file_hash)
 
-        except FileNotFoundError:
-            print("Файл index не найден.")
+            # Store file content in objects
+            with open(filepath, 'rb') as src, open(obj_path, 'wb') as dst:
+                dst.write(src.read())
+
+            # Update index
+            index.append({
+                "path": os.path.abspath(filepath),
+                "hash": file_hash,
+                "timestamp": datetime.now().isoformat()
+            })
+
+            with open(INDEX_FILE, 'w') as f:
+                json.dump(index, f, indent=2)
+
+            print(f"Added {filepath} to staging area")
+            return True
+
         except Exception as e:
-            print(f"Ошибка при работе с файлом index: {e}")
+            print(f"Error adding file: {str(e)}")
+            return False
 
-        def switch(line_name):
-            pass
+    @staticmethod
+    def remove(filepath):
+        """Remove file from staging area"""
+        if not os.path.exists(REPO_DIR):
+            print("Not a GitPlach repository")
+            return False
 
-        def zatuchka():
-            print("Затычка")
+        try:
+            with open(INDEX_FILE, 'r') as f:
+                index = json.load(f)
+
+            new_index = [item for item in index if item['path'] != os.path.abspath(filepath)]
+
+            if len(new_index) == len(index):
+                print(f"File {filepath} not in staging area")
+                return False
+
+            with open(INDEX_FILE, 'w') as f:
+                json.dump(new_index, f, indent=2)
+
+            print(f"Removed {filepath} from staging area")
+            return True
+
+        except Exception as e:
+            print(f"Error removing file: {str(e)}")
+            return False
+
+    @staticmethod
+    def save(message):
+        """Create new commit"""
+        if not os.path.exists(REPO_DIR):
+            print("Not a GitPlach repository")
+            return False
+
+        try:
+            # Read current index
+            with open(INDEX_FILE, 'r') as f:
+                index = json.load(f)
+
+            if not index:
+                print("Nothing to commit")
+                return False
+
+            # Read current branch
+            with open(HEAD_FILE, 'r') as f:
+                current_branch = f.read().strip()
+
+            # Create commit object
+            commit_id = hashlib.sha1(datetime.now().isoformat().encode()).hexdigest()
+            commit_path = os.path.join(COMMITS_DIR, commit_id)
+
+            commit_data = {
+                "id": commit_id,
+                "message": message,
+                "author": os.getenv("USER", "anonymous"),
+                "timestamp": datetime.now().isoformat(),
+                "branch": current_branch,
+                "files": index
+            }
+
+            with open(commit_path, 'w') as f:
+                json.dump(commit_data, f, indent=2)
+
+            # Clear staging area
+            with open(INDEX_FILE, 'w') as f:
+                json.dump([], f)
+
+            print(f"Committed {commit_id[:8]} on {current_branch}: {message}")
+            return True
+
+        except Exception as e:
+            print(f"Error creating commit: {str(e)}")
+            return False
+
+    @staticmethod
+    def check():
+        """List all commits"""
+        if not os.path.exists(REPO_DIR):
+            print("Not a GitPlach repository")
+            return False
+
+        try:
+            commits = []
+            for commit_file in os.listdir(COMMITS_DIR):
+                with open(os.path.join(COMMITS_DIR, commit_file), 'r') as f:
+                    commit_data = json.load(f)
+                    commits.append(commit_data)
+
+            # Sort by timestamp
+            commits.sort(key=lambda x: x['timestamp'], reverse=True)
+
+            print("\nCommit history:")
+            for commit in commits:
+                print(f"{commit['id'][:8]} [{commit['branch']}] {commit['message']}")
+                print(f"  Author: {commit['author']}")
+                print(f"  Date:   {commit['timestamp']}")
+                print(f"  Files:  {len(commit['files'])}\n")
+
+            return True
+
+        except Exception as e:
+            print(f"Error reading commits: {str(e)}")
+            return False
 
 
-#cli
+def main():
     parser = argparse.ArgumentParser(
-        description="У давай поплачь что у тебя сного не замерджилось", prog="GitPlach"
+        description="GitPlach - простой система контроля версий",
+        prog="gitplach"
     )
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
 
     parser.add_argument(
         "--version",
-        "--ver",
         action="version",
-        version=f"GitPlach {version}",
-        help="Show version number",
+        version=f"GitPlach {VERSION}",
+        help="Показать версию"
     )
 
-    #init
-    init_pareser = subparsers.add_parser("init", help="инициализировать репозиторий")
-    #init_pareser.add_argument("patch_to_derectory", help="", required=False)
+    subparsers = parser.add_subparsers(dest="command", help="Доступные команды")
 
-    #add
-    add_parser = subparsers.add_parser("add", help="добавить файл к коммиту")
-    add_parser.add_argument("patch_to_derectory", help="")
-    #remove
-    remove_parser = subparsers.add_parser("remove", help="удалить файл из коммита")
-    remove_parser.add_argument("filename",help="название файла")
-    #switch
-    switch_parser = subparsers.add_parser("switch", help="переключиться на другую линию")
-    #backto
-    backto_parser = subparsers.add_parser("backto", help="вернуться на коммит [название коммита]")
-    #save
-    save_parser = subparsers.add_parser("save", help="сохранить")
-    #check
-    check_parser = subparsers.add_parser("check", help="посмотреть коммиты")
-    #publish от это на потом
-    publish_parser = subparsers.add_parser("publish", help="опубликовать на PlachHab")
-    #line
-    line_parser = subparsers.add_parser("line", help="линия")
+    # Init command
+    init_parser = subparsers.add_parser("init", help="Инициализировать новый репозиторий")
+
+    # Add command
+    add_parser = subparsers.add_parser("add", help="Добавить файлы в staging area")
+    add_parser.add_argument("filepath", help="Путь к файлу")
+
+    # Remove command
+    remove_parser = subparsers.add_parser("remove", help="Удалить файлы из staging area")
+    remove_parser.add_argument("filepath", help="Путь к файлу")
+
+    # Save (commit) command
+    save_parser = subparsers.add_parser("save", help="Создать новый коммит")
+    save_parser.add_argument("-m", "--message", required=True, help="Сообщение коммита")
+
+    # Check command
+    check_parser = subparsers.add_parser("check", help="Показать историю коммитов")
 
     args = parser.parse_args()
 
     if args.command == "init":
-        crete_GitPlach()
+        GitPlach.init()
     elif args.command == "add":
-        add(123)
+        GitPlach.add(args.filepath)
     elif args.command == "remove":
-        filename = args.filename
-        remove(filename)
-    elif args.command == "switch":
-        pass
-    elif args.command == "backto":
-        pass
+        GitPlach.remove(args.filepath)
     elif args.command == "save":
-        save("1")
+        GitPlach.save(args.message)
     elif args.command == "check":
-        pass
-    elif args.command == "publish":
-        pass
-    elif args.command == "line":
-        pass
-#cli
+        GitPlach.check()
+    else:
+        parser.print_help()
+
 
 if __name__ == "__main__":
     main()
