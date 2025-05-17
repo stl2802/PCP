@@ -16,7 +16,6 @@ CONFIG_FILE = os.path.join(REPO_DIR, "config")
 class GitPlach:
     @staticmethod
     def init():
-        """Initialize new repository"""
         if not os.path.exists(REPO_DIR):
             os.makedirs(REPO_DIR)
             os.makedirs(OBJECTS_DIR)
@@ -43,7 +42,6 @@ class GitPlach:
 
     @staticmethod
     def _get_file_hash(filepath):
-        """Calculate SHA-1 hash of file content"""
         sha1 = hashlib.sha1()
         with open(filepath, 'rb') as f:
             while True:
@@ -55,7 +53,6 @@ class GitPlach:
 
     @staticmethod
     def add(filepath):
-        """Add file to staging area"""
         if not os.path.exists(REPO_DIR):
             print("Not a GitPlach repository")
             return False
@@ -71,11 +68,9 @@ class GitPlach:
             file_hash = GitPlach._get_file_hash(filepath)
             obj_path = os.path.join(OBJECTS_DIR, file_hash)
 
-            # Store file content in objects
             with open(filepath, 'rb') as src, open(obj_path, 'wb') as dst:
                 dst.write(src.read())
 
-            # Update index
             index.append({
                 "path": os.path.abspath(filepath),
                 "hash": file_hash,
@@ -94,7 +89,6 @@ class GitPlach:
 
     @staticmethod
     def remove(filepath):
-        """Remove file from staging area"""
         if not os.path.exists(REPO_DIR):
             print("Not a GitPlach repository")
             return False
@@ -121,13 +115,11 @@ class GitPlach:
 
     @staticmethod
     def save(message):
-        """Create new commit"""
         if not os.path.exists(REPO_DIR):
             print("Not a GitPlach repository")
             return False
 
         try:
-            # Read current index
             with open(INDEX_FILE, 'r') as f:
                 index = json.load(f)
 
@@ -135,11 +127,9 @@ class GitPlach:
                 print("Nothing to commit")
                 return False
 
-            # Read current branch
             with open(HEAD_FILE, 'r') as f:
                 current_branch = f.read().strip()
 
-            # Create commit object
             commit_id = hashlib.sha1(datetime.now().isoformat().encode()).hexdigest()
             commit_path = os.path.join(COMMITS_DIR, commit_id)
 
@@ -168,7 +158,6 @@ class GitPlach:
 
     @staticmethod
     def check():
-        """List all commits"""
         if not os.path.exists(REPO_DIR):
             print("Not a GitPlach repository")
             return False
@@ -180,7 +169,6 @@ class GitPlach:
                     commit_data = json.load(f)
                     commits.append(commit_data)
 
-            # Sort by timestamp
             commits.sort(key=lambda x: x['timestamp'], reverse=True)
 
             print("\nCommit history:")
@@ -198,6 +186,7 @@ class GitPlach:
 
 
 def main():
+    print("Программа запущена!")
     parser = argparse.ArgumentParser(
         description="GitPlach - простой система контроля версий",
         prog="gitplach"
@@ -212,22 +201,21 @@ def main():
 
     subparsers = parser.add_subparsers(dest="command", help="Доступные команды")
 
-    # Init command
+
     init_parser = subparsers.add_parser("init", help="Инициализировать новый репозиторий")
 
-    # Add command
+
     add_parser = subparsers.add_parser("add", help="Добавить файлы в staging area")
     add_parser.add_argument("filepath", help="Путь к файлу")
 
-    # Remove command
+
     remove_parser = subparsers.add_parser("remove", help="Удалить файлы из staging area")
     remove_parser.add_argument("filepath", help="Путь к файлу")
 
-    # Save (commit) command
+
     save_parser = subparsers.add_parser("save", help="Создать новый коммит")
     save_parser.add_argument("-m", "--message", required=True, help="Сообщение коммита")
 
-    # Check command
     check_parser = subparsers.add_parser("check", help="Показать историю коммитов")
 
     args = parser.parse_args()
